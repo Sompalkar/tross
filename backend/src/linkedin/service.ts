@@ -4,21 +4,19 @@ import { fileURLToPath } from "node:url";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 import { TtlCache } from "../utils/cache.js";
-import { toApiError, voyagerGet } from "./client.js";
-import { normalizeProfile } from "./normalize.js";
+import { fetchProfileHtml, fetchPublicProfileHtml, toApiError } from "./client.js";
+import { parseProfileHtml } from "./parse.js";
 import { extractPublicIdentifier } from "./url.js";
 import type { LinkedInProfile, ProfileResponse } from "../types/profile.js";
 
 const cache = new TtlCache<LinkedInProfile>(env.CACHE_TTL_SECONDS);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const FIXTURE_PATH = path.resolve(here, "../../fixtures/profile-view.json");
+const FIXTURE_PATH = path.resolve(here, "../../fixtures/profile.html");
 
 export interface GetProfileOptions {
   /** Skip the cache and always hit LinkedIn. */
   refresh?: boolean;
-  /** Also request contact info (one extra LinkedIn call). */
-  includeContactInfo?: boolean;
 }
 
 export async function getProfile(
@@ -27,7 +25,7 @@ export async function getProfile(
 ): Promise<ProfileResponse> {
   const started = Date.now();
   const publicIdentifier = extractPublicIdentifier(inputUrl);
-  const cacheKey = `${publicIdentifier}:${options.includeContactInfo ? "contact" : "base"}`;
+  const cacheKey = publicIdentifier;
 
   if (!options.refresh) {
     const cached = cache.get(cacheKey);
@@ -65,46 +63,16 @@ export async function getProfile(
 
 async function fetchFromLinkedIn(
   publicIdentifier: string,
-  options: GetProfileOptions,
+  _options: GetProfileOptions,
 ): Promise<LinkedInProfile> {
-  const id = encodeURIComponent(publicIdentifier);
-
   try {
-    // The main call. Everything below it is a bonus, so those are `optional`
-    // and a failure there never fails the whole request.
-    const profileView = await voyagerGet<Record<string, unknown>>(
-      `/identity/profiles/${id}/profileView`,
-    );
-
-    if (!profileView || !profileView["profile"]) {
-      throw toApiError(
-        new Error("LinkedIn returned an empty profile document."),
-      );
-    }
-
-    const [skills, networkInfo, contactInfo] = await Promise.all([
-      voyagerGet<Record<string, unknown>>(
-        `/identity/profiles/${id}/skills?count=100&start=0`,
-        { optional: true },
-      ),
-      voyagerGet<Record<string, unknown>>(`/identity/profiles/${id}/networkinfo`, {
-        optional: true,
-      }),
-      options.includeContactInfo
-        ? voyagerGet<Record<string, unknown>>(
-            `/identity/profiles/${id}/profileContactInfo`,
-            { optional: true },
-          )
-        : Promise.resolve(null),
+    // The authenticated page carries the data; the public page carries the
+    // avatar. The second one is a bonus, so a failure there is not fatal.
+    const [html, publicHtml] = await Promise.all([
+      fetchProfileHtml(publicIdentifier),
+      fetchPublicProfileHtml(publicIdentifier),
     ]);
-
-    return normalizeProfile({
-      publicIdentifier,
-      profileView,
-      skills,
-      networkInfo,
-      contactInfo,
-    });
+    return parseProfileHtml(html, publicIdentifier, publicHtml);
   } catch (error) {
     logger.warn({ publicIdentifier, err: error }, "profile fetch failed");
     throw toApiError(error);
@@ -117,9 +85,8 @@ async function fetchFromLinkedIn(
  * LinkedIn session, and it is what the automated tests run against.
  */
 async function fetchFromFixture(publicIdentifier: string): Promise<LinkedInProfile> {
-  const raw = await readFile(FIXTURE_PATH, "utf8");
-  const fixture = JSON.parse(raw) as Record<string, unknown>;
-  return normalizeProfile({ publicIdentifier, profileView: fixture });
+  const html = await readFile(FIXTURE_PATH, "utf8");
+  return parseProfileHtml(html, publicIdentifier);
 }
 
 export const profileCache = cache;
