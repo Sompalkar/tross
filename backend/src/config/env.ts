@@ -9,7 +9,15 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
 
-  /** LinkedIn session cookies (see README -> "Getting your cookies"). */
+  /**
+   * The whole cookie header copied from a logged-in browser.
+   * LinkedIn needs far more than li_at: without the routing and device
+   * cookies (lidc, bcookie, bscookie, ...) it answers with an endless
+   * redirect instead of a page. See README -> "Getting your cookies".
+   */
+  LINKEDIN_COOKIE: z.string().min(20).optional(),
+
+  /** Older two-cookie style, kept working as a fallback. */
   LINKEDIN_LI_AT: z.string().min(10).optional(),
   LINKEDIN_JSESSIONID: z.string().min(5).optional(),
 
@@ -48,9 +56,20 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 
-export const hasLinkedInCredentials = Boolean(
-  env.LINKEDIN_LI_AT && env.LINKEDIN_JSESSIONID,
-);
+/**
+ * Builds the cookie header to send. A full captured cookie string is used as
+ * it is; otherwise the two named cookies are assembled into one.
+ */
+export function linkedInCookieHeader(): string | null {
+  if (env.LINKEDIN_COOKIE) return env.LINKEDIN_COOKIE.trim();
+  if (env.LINKEDIN_LI_AT && env.LINKEDIN_JSESSIONID) {
+    const jsessionId = env.LINKEDIN_JSESSIONID.replace(/^"|"$/g, "");
+    return `li_at=${env.LINKEDIN_LI_AT}; JSESSIONID="${jsessionId}";`;
+  }
+  return null;
+}
+
+export const hasLinkedInCredentials = linkedInCookieHeader() !== null;
 
 export const corsOrigins =
   env.CORS_ORIGINS === "*"

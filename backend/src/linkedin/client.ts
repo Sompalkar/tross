@@ -1,151 +1,197 @@
 import axios, { AxiosError, type AxiosInstance } from "axios";
-import { env, hasLinkedInCredentials } from "../config/env.js";
+import { CookieJar } from "tough-cookie";
+import { wrapper } from "axios-cookiejar-support";
+import { env, linkedInCookieHeader } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 import { ApiError } from "../utils/errors.js";
 import { sleep } from "../utils/sleep.js";
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- *  Voyager
+ *  How we read a profile
  * ─────────────────────────────────────────────────────────────────────────────
- * linkedin.com is a single-page app. When you open a profile in the browser,
- * the page itself is nearly empty and the real data arrives from LinkedIn's
- * private JSON API, which lives under /voyager/api/. That API is what we talk
- * to here — it returns clean JSON, so we never have to parse HTML.
+ * LinkedIn used to expose a private JSON API at /voyager/api. That is gone:
+ * `/identity/profiles/{id}/profileView` now answers 410, and the current
+ * desktop site fetches nothing at all for a profile — it ships the page as a
+ * React Server Components payload, which is a UI tree rather than data.
  *
- * To be allowed in, a request needs to look exactly like the browser's:
- *   1. cookie      -> `li_at` (the session) and `JSESSIONID` (the CSRF value)
- *   2. csrf-token  -> the JSESSIONID value again, without its quotes
- *   3. x-restli-protocol-version: 2.0.0  -> Rest.li, LinkedIn's RPC layer
- * Miss any of the three and LinkedIn answers 401/403 instead of data.
+ * What LinkedIn does still serve is "mwlite", its lightweight mobile site.
+ * Ask for a profile with a mobile user agent and the server returns the whole
+ * profile as plain, already-rendered HTML: name, headline, location, about,
+ * experience, education, skills, accomplishments, images — one request, no
+ * JavaScript, no query hashes that expire.
+ *
+ * Two details make the difference between data and an infinite redirect:
+ *
+ *   1. The FULL cookie header. `li_at` alone is not enough any more; LinkedIn
+ *      also wants its routing and device cookies (lidc, bcookie, bscookie).
+ *      Without them it 302s to the same URL forever, trying to set them.
+ *   2. A cookie jar. LinkedIn rotates `li_at` mid-session: it answers with a
+ *      redirect that carries a replacement cookie and expects the next request
+ *      to use it. A client that keeps resending the original loops forever.
  */
-const VOYAGER_BASE = "https://www.linkedin.com/voyager/api";
-
-const USER_AGENT =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-
-/** JSESSIONID is stored as `"ajax:1234..."` — the CSRF header wants it unquoted. */
-const stripQuotes = (value: string): string => value.replace(/^"|"$/g, "");
+const MOBILE_USER_AGENT =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
 let client: AxiosInstance | null = null;
 
-export function getVoyagerClient(): AxiosInstance {
+function getClient(): AxiosInstance {
   if (client) return client;
 
-  if (!hasLinkedInCredentials) {
+  const cookie = linkedInCookieHeader();
+  if (!cookie) {
     throw ApiError.notConfigured(
-      "LINKEDIN_LI_AT and LINKEDIN_JSESSIONID are not set. Set them, or run with MOCK_MODE=true.",
+      "No LinkedIn cookie configured. Set LINKEDIN_COOKIE, or run with MOCK_MODE=true.",
     );
   }
 
-  const liAt = env.LINKEDIN_LI_AT!;
-  const jsessionId = stripQuotes(env.LINKEDIN_JSESSIONID!);
+  // Seed the jar with the captured cookies, then let it absorb whatever
+  // LinkedIn rotates during the session.
+  const jar = new CookieJar();
+  for (const pair of cookie.split(";")) {
+    const trimmed = pair.trim();
+    if (!trimmed) continue;
+    try {
+      jar.setCookieSync(`${trimmed}; Domain=.linkedin.com; Path=/`, "https://www.linkedin.com");
+    } catch {
+      // A malformed pair is not worth failing the whole request over.
+    }
+  }
 
-  client = axios.create({
-    baseURL: VOYAGER_BASE,
-    timeout: 20_000,
-    // Handle every status ourselves so we can map them to friendly errors.
-    validateStatus: () => true,
-    headers: {
-      cookie: `li_at=${liAt}; JSESSIONID="${jsessionId}";`,
-      "csrf-token": jsessionId,
-      "x-restli-protocol-version": "2.0.0",
-      "x-li-lang": "en_US",
-      "x-li-track": JSON.stringify({
-        clientVersion: "1.13.9",
-        mpVersion: "1.13.9",
-        osName: "web",
-        timezoneOffset: 0,
-        deviceFormFactor: "DESKTOP",
-        mpName: "voyager-web",
-      }),
-      // Plain JSON gives us the classic nested `profileView` shape, which is
-      // far easier to read than the "normalized" graph format LinkedIn also
-      // offers (that one returns URNs plus a flat `included` array).
-      accept: "application/json",
-      "accept-language": "en-US,en;q=0.9",
-      "user-agent": USER_AGENT,
-      referer: "https://www.linkedin.com/feed/",
-    },
-  });
+  client = wrapper(
+    axios.create({
+      jar,
+      withCredentials: true,
+      timeout: 30_000,
+      maxRedirects: 5,
+      validateStatus: () => true,
+      headers: {
+        "user-agent": MOBILE_USER_AGENT,
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "en-US,en;q=0.9",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "none",
+        "upgrade-insecure-requests": "1",
+      },
+    }),
+  );
 
   return client;
 }
 
 /** Only used by tests, so a fresh client picks up changed env vars. */
-export function resetVoyagerClient(): void {
+export function resetClient(): void {
   client = null;
 }
 
-export interface VoyagerGetOptions {
-  /** Some endpoints 404 for perfectly normal reasons; then we want `null`. */
-  optional?: boolean;
-  headers?: Record<string, string>;
-}
-
-/**
- * GET a Voyager path, with a small delay in front of it (rate-limit hygiene)
- * and LinkedIn's status codes translated into meaningful API errors.
- */
-export async function voyagerGet<T>(
-  path: string,
-  options: VoyagerGetOptions = {},
-): Promise<T | null> {
-  const http = getVoyagerClient();
+/** Fetches a profile page as HTML, with LinkedIn's failures made legible. */
+export async function fetchProfileHtml(publicIdentifier: string): Promise<string> {
+  const http = getClient();
   await sleep(env.REQUEST_DELAY_MS);
 
+  const url = `https://www.linkedin.com/in/${encodeURIComponent(publicIdentifier)}/`;
   const started = Date.now();
-  const response = await http.get<T>(path, { headers: options.headers });
+
+  const response = await http.get<string>(url);
+  const html = typeof response.data === "string" ? response.data : "";
+
   logger.debug(
-    { path, status: response.status, ms: Date.now() - started },
-    "voyager request",
+    { publicIdentifier, status: response.status, bytes: html.length, ms: Date.now() - started },
+    "profile fetch",
   );
 
-  const { status, data } = response;
+  if (response.status === 404) throw ApiError.notFound();
 
-  if (status >= 200 && status < 300) return data;
-
-  if (status === 404 || status === 400) {
-    if (options.optional) return null;
-    throw ApiError.notFound(
-      "LinkedIn has no profile at that URL, or the profile is not visible to the logged-in account.",
-    );
-  }
-
-  if (status === 401) {
-    throw ApiError.upstream(
-      "LinkedIn rejected the session cookie. It has expired or was invalidated — refresh LINKEDIN_LI_AT and LINKEDIN_JSESSIONID.",
-    );
-  }
-
-  if (status === 403) {
-    throw ApiError.upstream(
-      "LinkedIn returned 403. The account is most likely challenged (captcha / verification) — sign in from a browser to clear it.",
-    );
-  }
-
-  if (status === 429) {
+  if (response.status === 429) {
     throw new ApiError(
       429,
       "LINKEDIN_RATE_LIMITED",
-      "LinkedIn is rate limiting this account. Slow down (raise REQUEST_DELAY_MS) and try again later.",
+      "LinkedIn is rate limiting this account. Raise REQUEST_DELAY_MS and try again later.",
     );
   }
 
-  if (options.optional) return null;
+  if (response.status >= 400) {
+    throw ApiError.upstream(`LinkedIn responded with HTTP ${response.status}.`, {
+      status: response.status,
+    });
+  }
 
-  throw ApiError.upstream(`LinkedIn responded with HTTP ${status}.`, {
-    status,
-    body: typeof data === "string" ? data.slice(0, 500) : data,
-  });
+  // A valid session that has been bounced to the login or challenge page
+  // still returns 200, so the body has to be checked too.
+  if (/\/uas\/login|authwall|Sign in to LinkedIn/i.test(html.slice(0, 5000))) {
+    throw ApiError.upstream(
+      "LinkedIn served a login wall. The cookie has expired or was invalidated — capture a fresh one.",
+    );
+  }
+
+  if (/security\s+verification|challenge/i.test(html.slice(0, 3000))) {
+    throw ApiError.upstream(
+      "LinkedIn is showing a security challenge for this account. Sign in from a browser to clear it.",
+    );
+  }
+
+  if (html.length < 5_000) {
+    throw ApiError.upstream(
+      "LinkedIn returned an unexpectedly small page. The session is probably no longer valid.",
+    );
+  }
+
+  return html;
+}
+
+const DESKTOP_USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+/**
+ * Fetches the logged-out public profile page.
+ *
+ * mwlite never sends a member's avatar — it renders a grey placeholder and
+ * would fill it in from JavaScript. The public page, on the other hand,
+ * carries the photo in its Open Graph tags, and because it is fetched with no
+ * cookie there is no chance of picking up the *viewer's* own avatar by
+ * mistake. It is a separate, unauthenticated request, and it is allowed to
+ * fail without failing the lookup.
+ */
+export async function fetchPublicProfileHtml(
+  publicIdentifier: string,
+): Promise<string | null> {
+  try {
+    const response = await axios.get<string>(
+      `https://www.linkedin.com/in/${encodeURIComponent(publicIdentifier)}`,
+      {
+        headers: {
+          "user-agent": DESKTOP_USER_AGENT,
+          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "accept-language": "en-US,en;q=0.9",
+        },
+        timeout: 15_000,
+        maxRedirects: 5,
+        validateStatus: () => true,
+      },
+    );
+    return response.status === 200 && typeof response.data === "string"
+      ? response.data
+      : null;
+  } catch (error) {
+    logger.debug({ publicIdentifier, err: error }, "public page fetch failed");
+    return null;
+  }
 }
 
 /** Turns network-level failures into the same ApiError shape. */
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) return error;
+
   if (error instanceof AxiosError) {
+    if (error.code === "ERR_FR_TOO_MANY_REDIRECTS") {
+      return ApiError.upstream(
+        "LinkedIn redirected in a loop. That means the cookie is stale or incomplete — copy the whole cookie header from a logged-in browser.",
+      );
+    }
     return ApiError.upstream(`Could not reach LinkedIn: ${error.message}`);
   }
+
   return ApiError.upstream(
     error instanceof Error ? error.message : "Unknown error talking to LinkedIn.",
   );
