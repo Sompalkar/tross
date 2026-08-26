@@ -269,10 +269,10 @@ function Header({ profile }: { profile: LinkedInProfile }) {
         </Meta>
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
           {profile.connectionsCount !== null && (
-            <Pill>{profile.connectionsCount}+ connections</Pill>
+            <Pill>{formatCount(profile.connectionsCount)}+ connections</Pill>
           )}
           {profile.followersCount !== null && (
-            <Pill>{profile.followersCount} followers</Pill>
+            <Pill>{formatCount(profile.followersCount)} followers</Pill>
           )}
           {profile.isOpenToWork && <Pill>Open to work</Pill>}
           {profile.isHiring && <Pill>Hiring</Pill>}
@@ -300,4 +300,9 @@ function initials(name: string | null | undefined): string {
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+/** 12136640 -> "12,136,640" */
+function formatCount(value: number): string {
+  return value.toLocaleString("en-US");
 }

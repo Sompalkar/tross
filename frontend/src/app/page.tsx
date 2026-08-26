@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ProfileView } from "@/components/ProfileView";
 import type { ProfileResult, ProfileSuccess } from "@/lib/types";
 
-const EXAMPLE = "https://www.linkedin.com/in/ada-lovelace";
+const EXAMPLE = "https://www.linkedin.com/in/williamhgates";
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -42,8 +42,8 @@ export default function Home() {
           LinkedIn Profile API
         </h1>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Paste a public LinkedIn profile URL. The API reads it through LinkedIn&apos;s
-          internal Voyager endpoints and returns structured JSON.
+          Paste a LinkedIn profile URL. The API reads the profile the way
+          LinkedIn&apos;s own mobile site does, and returns structured JSON.
         </p>
       </header>
 
