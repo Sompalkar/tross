@@ -1,0 +1,181 @@
+{
+  "profile": {
+    "entityUrn": "urn:li:fs_profile:ACoAAA8BYqEBCDEFGH",
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "headline": "Principal Engineer at Analytical Engines · Building reliable systems",
+    "summary": "I design and ship backend systems that stay boring under load.\n\nMost of my work is API design, distributed systems and developer tooling. I care about clear interfaces, honest error messages and tests that catch real bugs.",
+    "publicIdentifier": "ada-lovelace",
+    "industryName": "Software Development",
+    "locationName": "London",
+    "geoLocationName": "London, England, United Kingdom",
+    "geoCountryName": "United Kingdom",
+    "student": false,
+    "location": { "basicLocation": { "countryCode": "gb", "postalCode": "EC1A" } },
+    "miniProfile": {
+      "entityUrn": "urn:li:fs_miniProfile:ACoAAA8BYqEBCDEFGH",
+      "firstName": "Ada",
+      "lastName": "Lovelace",
+      "occupation": "Principal Engineer at Analytical Engines",
+      "publicIdentifier": "ada-lovelace",
+      "picture": {
+        "com.linkedin.common.VectorImage": {
+          "rootUrl": "https://media.licdn.com/dms/image/v2/D4E03AQEXAMPLE/profile-displayphoto-shrink_",
+          "artifacts": [
+            { "width": 100, "height": 100, "fileIdentifyingUrlPathSegment": "100_100/0/1700000000000?e=1735000000&v=beta&t=demo" },
+            { "width": 200, "height": 200, "fileIdentifyingUrlPathSegment": "200_200/0/1700000000000?e=1735000000&v=beta&t=demo" },
+            { "width": 400, "height": 400, "fileIdentifyingUrlPathSegment": "400_400/0/1700000000000?e=1735000000&v=beta&t=demo" },
+            { "width": 800, "height": 800, "fileIdentifyingUrlPathSegment": "800_800/0/1700000000000?e=1735000000&v=beta&t=demo" }
+          ]
+        }
+      },
+      "backgroundImage": {
+        "com.linkedin.common.VectorImage": {
+          "rootUrl": "https://media.licdn.com/dms/image/v2/D4E16AQEXAMPLE/profile-displaybackgroundimage-shrink_",
+          "artifacts": [
+            { "width": 350, "height": 87, "fileIdentifyingUrlPathSegment": "350_87/0/1700000000000?e=1735000000&v=beta&t=demo" },
+            { "width": 1584, "height": 396, "fileIdentifyingUrlPathSegment": "1584_396/0/1700000000000?e=1735000000&v=beta&t=demo" }
+          ]
+        }
+      }
+    }
+  },
+  "positionView": {
+    "elements": [
+      {
+        "title": "Principal Engineer",
+        "companyName": "Analytical Engines",
+        "companyUrn": "urn:li:fs_miniCompany:1441",
+        "locationName": "London, United Kingdom",
+        "description": "Lead the platform team. Owned the migration from a single Rails monolith to six Node services without downtime.",
+        "timePeriod": { "startDate": { "month": 3, "year": 2021 } },
+        "company": {
+          "employeeCountRange": { "start": 201, "end": 500 },
+          "industries": ["Software Development"],
+          "miniCompany": {
+            "entityUrn": "urn:li:fs_miniCompany:1441",
+            "name": "Analytical Engines",
+            "universalName": "analytical-engines",
+            "logo": {
+              "com.linkedin.common.VectorImage": {
+                "rootUrl": "https://media.licdn.com/dms/image/v2/C4E0BAQEXAMPLE/company-logo_",
+                "artifacts": [
+                  { "width": 100, "height": 100, "fileIdentifyingUrlPathSegment": "100_100/0/1700000000000?e=1735000000&v=beta&t=demo" },
+                  { "width": 200, "height": 200, "fileIdentifyingUrlPathSegment": "200_200/0/1700000000000?e=1735000000&v=beta&t=demo" }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "title": "Senior Backend Engineer",
+        "companyName": "Difference Machines",
+        "locationName": "Remote",
+        "description": "Built the billing pipeline that processes 40k invoices a day.",
+        "timePeriod": {
+          "startDate": { "month": 6, "year": 2017 },
+          "endDate": { "month": 2, "year": 2021 }
+        },
+        "company": { "miniCompany": { "name": "Difference Machines", "universalName": "difference-machines" } }
+      }
+    ]
+  },
+  "educationView": {
+    "elements": [
+      {
+        "schoolName": "University of London",
+        "degreeName": "MSc",
+        "fieldOfStudy": "Computer Science",
+        "grade": "Distinction",
+        "activities": "Robotics society, ACM chapter",
+        "timePeriod": { "startDate": { "year": 2013 }, "endDate": { "year": 2015 } },
+        "school": { "schoolName": "University of London", "universalName": "university-of-london" }
+      }
+    ]
+  },
+  "skillView": {
+    "elements": [
+      { "name": "TypeScript" },
+      { "name": "Node.js" },
+      { "name": "Distributed Systems" },
+      { "name": "PostgreSQL" },
+      { "name": "API Design" },
+      { "name": "Kubernetes" }
+    ]
+  },
+  "certificationView": {
+    "elements": [
+      {
+        "name": "AWS Certified Solutions Architect – Associate",
+        "authority": "Amazon Web Services (AWS)",
+        "licenseNumber": "AWS-ASA-0001",
+        "url": "https://www.credly.com/badges/example",
+        "timePeriod": { "startDate": { "month": 5, "year": 2022 } }
+      }
+    ]
+  },
+  "languageView": {
+    "elements": [
+      { "name": "English", "proficiency": "NATIVE_OR_BILINGUAL" },
+      { "name": "French", "proficiency": "PROFESSIONAL_WORKING" }
+    ]
+  },
+  "projectView": {
+    "elements": [
+      {
+        "title": "OpenTrace",
+        "description": "An open-source distributed tracing helper for Node services.",
+        "url": "https://github.com/example/opentrace",
+        "timePeriod": { "startDate": { "month": 1, "year": 2023 } },
+        "members": { "elements": [{ "member": { "firstName": "Ada", "lastName": "Lovelace" } }] }
+      }
+    ]
+  },
+  "publicationView": {
+    "elements": [
+      {
+        "name": "Notes on the Analytical Engine",
+        "publisher": "Scientific Memoirs",
+        "description": "A practical look at programmable machines.",
+        "url": "https://example.com/notes",
+        "date": { "month": 10, "year": 2019 },
+        "authors": { "elements": [{ "member": { "firstName": "Ada", "lastName": "Lovelace" } }] }
+      }
+    ]
+  },
+  "volunteerExperienceView": {
+    "elements": [
+      {
+        "role": "Mentor",
+        "companyName": "Code First Girls",
+        "cause": "SCIENCE_AND_TECHNOLOGY",
+        "description": "Weekly mentoring for career switchers.",
+        "timePeriod": { "startDate": { "month": 9, "year": 2020 } }
+      }
+    ]
+  },
+  "honorView": {
+    "elements": [
+      {
+        "title": "Engineering Excellence Award",
+        "issuer": "Analytical Engines",
+        "description": "For the zero-downtime migration.",
+        "issueDate": { "month": 12, "year": 2022 }
+      }
+    ]
+  },
+  "courseView": { "elements": [{ "name": "Advanced Algorithms", "number": "CS6161" }] },
+  "organizationView": {
+    "elements": [
+      {
+        "name": "ACM",
+        "position": "Member",
+        "description": "Association for Computing Machinery.",
+        "timePeriod": { "startDate": { "year": 2016 } }
+      }
+    ]
+  },
+  "patentView": { "elements": [] },
+  "testScoreView": { "elements": [] }
+}
