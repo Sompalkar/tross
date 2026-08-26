@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build output
+dist/
+.next/
+out/
+build/
+
+# environment — never commit real credentials
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# misc
+coverage/
+.vercel
+*.tsbuildinfo
+next-env.d.ts
