@@ -23,6 +23,24 @@ GET /api/profile?url=https://www.linkedin.com/in/williamhgates
 }
 ```
 
+## Live
+
+| | |
+| --- | --- |
+| **API** | <https://tross-9ns7.onrender.com> |
+| **Try it in a browser** | <https://tross-web.vercel.app> |
+| **Health check** | <https://tross-9ns7.onrender.com/api/health> |
+
+```bash
+curl -G https://tross-9ns7.onrender.com/api/profile \
+  --data-urlencode "url=https://www.linkedin.com/in/williamhgates"
+```
+
+> **The API is on Render's free tier, so it sleeps after 15 minutes idle.** The
+> first request after a quiet spell takes around 50 seconds while the instance
+> wakes; every one after that is a few seconds. If a first call seems to hang,
+> that is what is happening.
+
 - **`backend/`** — the API. Node.js + TypeScript + Express.
 - **`frontend/`** — a small Next.js + Tailwind page to try it in a browser.
 
@@ -265,7 +283,8 @@ the first request.
 
 ## 6. API documentation
 
-Base URL (local): `http://localhost:4000`
+Base URL — local: `http://localhost:4000`, deployed:
+`https://tross-9ns7.onrender.com`
 
 Authentication: if `API_KEY` is set, send it as `x-api-key: <key>` or
 `Authorization: Bearer <key>`. Otherwise no auth is needed.
