@@ -25,8 +25,10 @@ services:
         value: "false"
       - key: CORS_ORIGINS
         value: "*"
+      # Deliberately low: this limit is enforced per instance, so the real
+      # ceiling is this number multiplied by however many are running.
       - key: RATE_LIMIT_MAX
-        value: "15"
+        value: "8"
       # Prompted for in the dashboard; never stored in the repository.
       - key: LINKEDIN_COOKIE
         sync: false

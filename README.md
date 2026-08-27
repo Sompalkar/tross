@@ -256,7 +256,7 @@ failing silently.
 | `CORS_ORIGINS` | `*` | Comma-separated allowed browser origins. |
 | `CACHE_TTL_SECONDS` | `900` | How long to reuse a fetched profile. `0` disables the cache. |
 | `RATE_LIMIT_WINDOW_MS` | `60000` | Rate-limit window. |
-| `RATE_LIMIT_MAX` | `20` | Max requests per IP per window. |
+| `RATE_LIMIT_MAX` | `20` | Max requests per IP per window, **per instance** — see [limitations](#13-known-limitations). |
 | `REQUEST_DELAY_MS` | `1200` | Pause before each LinkedIn call. |
 | `LOG_LEVEL` | `info` | pino log level. |
 
@@ -662,8 +662,20 @@ temporary.
 
 **Engineering**
 
-- **The cache is in-process.** Two instances do not share it. Redis would be
-  the swap, and `TtlCache` is small enough to replace in one file.
+- **The cache and the rate limit are per-instance, and that is measurable.**
+  Hitting the deployed API repeatedly and watching the `ratelimit-remaining`
+  header returns interleaved sequences — 5, 4, 7, 6, 3, 12, 11, 2 — which is
+  three instances each counting separately. So the effective limit is
+  `RATE_LIMIT_MAX × instances`, not `RATE_LIMIT_MAX`, and a cached profile is
+  only a hit if the same instance serves the repeat request.
+
+  Both are the same fix: move the store to Redis. `TtlCache` is small enough to
+  swap in one file, and `express-rate-limit` takes a store adapter. Until then,
+  set `RATE_LIMIT_MAX` low enough that the multiplied ceiling is still sane.
+
+- **Per-IP limiting is best-effort behind a proxy.** The app trusts one proxy
+  hop to read the client address. That is right for Render, but a client-sent
+  `X-Forwarded-For` should be treated as a hint rather than a guarantee.
 - **HTML can change.** The parser targets semantic containers and LinkedIn's
   own tracking attributes rather than styling classes, and every field degrades
   to `null` instead of throwing — but a redesign of mwlite would need work.
