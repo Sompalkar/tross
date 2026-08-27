@@ -12,7 +12,10 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm ci && npm run build
+    # --include=dev is required: NODE_ENV below is production, and npm skips
+    # devDependencies in that mode — which leaves TypeScript uninstalled, so
+    # the build silently fails and there is no dist/ for the start command.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:

@@ -521,6 +521,12 @@ frontend, `npm init` + `tsc --init` for the backend).
 [`render.yaml`](render.yaml) is a ready blueprint. It lives at the repository
 root because that is the only place Render looks for one.
 
+> **If the build command is ever set by hand, keep the `--include=dev` flag.**
+> The service runs with `NODE_ENV=production`, and in that mode npm installs no
+> devDependencies — so TypeScript goes missing, `tsc` fails, and the only
+> symptom is `Cannot find module dist/index.js` at start-up, which points at
+> the wrong problem entirely.
+
 1. Push this repository to GitHub.
 2. Render → **New** → **Blueprint** → pick the repo.
 3. When prompted, fill in `LINKEDIN_COOKIE` and `API_KEY`. They are marked
