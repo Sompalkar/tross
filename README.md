@@ -471,7 +471,8 @@ frontend, `npm init` + `tsc --init` for the backend).
 
 ### Backend on Render
 
-[`backend/render.yaml`](backend/render.yaml) is a ready blueprint.
+[`render.yaml`](render.yaml) is a ready blueprint. It lives at the repository
+root because that is the only place Render looks for one.
 
 1. Push this repository to GitHub.
 2. Render → **New** → **Blueprint** → pick the repo.

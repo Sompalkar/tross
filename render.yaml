@@ -1,0 +1,31 @@
+# Blueprint for Render (https://render.com).
+#
+# Render only reads render.yaml from the repository root, which is why this
+# sits here rather than next to the backend it describes; `rootDir` points at
+# the right folder.
+#
+# Secrets are marked `sync: false`, so Render prompts for them in its dashboard
+# instead of ever reading them from this file.
+services:
+  - type: web
+    name: linkedin-profile-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MOCK_MODE
+        value: "false"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: RATE_LIMIT_MAX
+        value: "15"
+      # Prompted for in the dashboard; never stored in the repository.
+      - key: LINKEDIN_COOKIE
+        sync: false
+      - key: API_KEY
+        sync: false
