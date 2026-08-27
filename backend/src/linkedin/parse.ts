@@ -529,6 +529,10 @@ export function parseProfileHtml(
 
   const about = clean($(".summary-container .description").first().text());
 
+  // Only the identity block, so a badge belonging to someone else on the page
+  // cannot be mistaken for this profile's.
+  const badgeText = basic.text();
+
   return {
     publicIdentifier,
     profileId: null,
@@ -549,11 +553,17 @@ export function parseProfileHtml(
     },
 
     industry: null,
+    // Not on the mwlite page at all, so `null` (unknown) rather than a guess.
     isStudent: null,
     isPremium: null,
-    isInfluencer: $(".premium-icon, [data-test-icon='premium']").length > 0 || null,
-    isOpenToWork: /open to work/i.test(html) || null,
-    isHiring: /#hiring|is hiring/i.test(html) || null,
+    isInfluencer: null,
+
+    // These two are real badges in the top card. Scoping the check to that
+    // card matters: searching the whole page would match the "Add open to
+    // work" button on your own profile, or another person's badge in the
+    // "people also viewed" list, and report it as this profile's.
+    isOpenToWork: /open to work/i.test(badgeText),
+    isHiring: /#?hiring/i.test(badgeText),
 
     profilePicture:
       parsePublicPhoto(publicPageHtml) ??

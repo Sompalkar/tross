@@ -87,6 +87,27 @@ describe("parseProfileHtml", () => {
     assert.equal(profile.projects[0]?.title, "OpenTrace");
   });
 
+  it("reads badges only from the identity block", () => {
+    // The fixture has no badge, and a mention elsewhere on the page must not
+    // be attributed to this profile.
+    assert.equal(profile.isOpenToWork, false);
+    assert.equal(profile.isHiring, false);
+
+    const withStrayBadge = parseProfileHtml(
+      `<section class="basic-profile-section"><h1>Ada Lovelace</h1></section>
+       <section class="pav-container"><span>#Hiring</span><span>Open to work</span></section>`,
+      "ada-lovelace",
+    );
+    assert.equal(withStrayBadge.isOpenToWork, false);
+    assert.equal(withStrayBadge.isHiring, false);
+
+    const withOwnBadge = parseProfileHtml(
+      `<section class="basic-profile-section"><h1>Ada Lovelace</h1><span>Open to work</span></section>`,
+      "ada-lovelace",
+    );
+    assert.equal(withOwnBadge.isOpenToWork, true);
+  });
+
   it("survives a page with no profile content", () => {
     const empty = parseProfileHtml("<html><body></body></html>", "someone");
     assert.equal(empty.fullName, null);
