@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<!--
+  A hand-written stand-in for a LinkedIn mwlite profile page.
+
+  The structure mirrors the real thing — the same container classes, the same
+  lazily-loaded images, the same CSS-drawn "·" separators — but the person,
+  the employers and the image URLs are invented. No real profile data is
+  committed to this repository.
+
+  It powers MOCK_MODE and the parser tests. Padding is added at the end so the
+  page passes the client's "suspiciously small response" check.
+-->
+<html lang="en">
+  <head><title>Ada Lovelace | LinkedIn</title></head>
+  <body class="mwlite">
+    <section class="basic-profile-section bg-color-background-container">
+      <div class="cover-image-container">
+        <img aria-label="Member Background Photo"
+             data-delayed-url="https://media.licdn.com/dms/image/v2/EXAMPLE/profile-displaybackgroundimage-shrink_200_800/0/1700000000000?e=1&amp;v=beta&amp;t=demo">
+      </div>
+      <figure id="profile-picture-container">
+        <img data-delayed-url="https://static.licdn.com/aero-v1/sc/h/ghostplaceholder"
+             data-ghost-url="https://static.licdn.com/aero-v1/sc/h/ghostplaceholder"
+             alt="Profile picture of Ada Lovelace">
+      </figure>
+      <h1 class="text-color-text heading-large" dir="ltr">Ada Lovelace</h1>
+      <div class="body-small text-color-text">
+        <span dir="ltr">Principal Engineer at Analytical Engines</span>
+      </div>
+      <div class="body-small text-color-text-low-emphasis">
+        <span class="member-current-company" dir="ltr">Analytical Engines</span>
+      </div>
+      <div class="body-small text-color-text-low-emphasis">
+        London, England, United Kingdom
+        <span class="dot-separator" aria-hidden="true"></span>
+        <span>4,208 followers</span>
+        <span class="dot-separator" aria-hidden="true"></span>
+        <span>500+ connections</span>
+      </div>
+      <div class="body-small text-color-text-low-emphasis">Joined 2013</div>
+    </section>
+
+    <section class="bg-color-background-container summary-container">
+      <h2>About</h2>
+      <div class="body-small description" dir="ltr">I design and ship backend systems that stay boring under load.
+
+Most of my work is API design, distributed systems and developer tooling.</div>
+    </section>
+
+    <section class="bg-color-background-container experience-container collapsible-list-container">
+      <h2>Experience</h2>
+      <ol>
+        <li class="profile-entity-lockup visible-entity">
+          <a href="https://www.linkedin.com/company/analytical-engines?trk=profile-position"
+             data-tracking-control-name="profile-position">
+            <figure>
+              <img data-delayed-url="https://media.licdn.com/dms/image/v2/EXAMPLE/company-logo_100_100/0/1700000000000?e=1&amp;v=beta&amp;t=demo"
+                   alt="Logo of Analytical Engines">
+            </figure>
+          </a>
+          <div>
+            <div class="body-medium-bold list-item-heading"><span dir="ltr">Principal Engineer</span></div>
+            <div class="body-small"><span dir="ltr">Analytical Engines</span><span class="dot-separator"></span><span>Full-time</span></div>
+            <div class="body-small">Mar 2021 - Present<span class="dot-separator"></span><span>5 yrs 6 mos</span></div>
+            <div class="text-xs text-color-text-low-emphasis"><span dir="ltr">London, United Kingdom</span></div>
+            <div class="body-small description" dir="ltr">Lead the platform team. Owned the migration from a monolith to six services without downtime.</div>
+          </div>
+        </li>
+        <li class="profile-entity-lockup visible-entity">
+          <a href="https://www.linkedin.com/company/difference-machines?trk=profile-position"
+             data-tracking-control-name="profile-position"></a>
+          <div>
+            <div class="body-medium-bold list-item-heading"><span dir="ltr">Senior Backend Engineer</span></div>
+            <div class="body-small"><span dir="ltr">Difference Machines</span></div>
+            <div class="body-small">Jun 2017 - Feb 2021<span class="dot-separator"></span><span>3 yrs 9 mos</span></div>
+            <div class="text-xs text-color-text-low-emphasis"><span dir="ltr">Remote</span></div>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="bg-color-background-container education-container collapsible-list-container">
+      <h2>Education</h2>
+      <ol>
+        <li class="entity-lockup profile-entity-lockup visible-entity">
+          <a href="https://www.linkedin.com/school/university-of-london/?trk=view-organization"
+             data-tracking-control-name="view-education">
+            <img data-delayed-url="https://media.licdn.com/dms/image/v2/EXAMPLE/company-logo_100_100/0/1700000000001?e=1&amp;v=beta&amp;t=demo"
+                 alt="logo of University of London">
+          </a>
+          <div>
+            <div class="list-item-heading body-medium-bold" dir="ltr">University of London</div>
+            <div class="body-small text-color-text"><span>Master of Science</span><span class="dot-separator"></span><span class="body-small">Computer Science</span></div>
+            <div class="body-small text-color-text-low-emphasis">Sep 2013 - Jun 2015</div>
+            <div class="body-small mt-1 text-color-text">Grade: Distinction</div>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="bg-color-background-container skills-container collapsed">
+      <h2>Skills</h2>
+      <ol class="skills-list">
+        <li class="skill-item"><span dir="ltr">TypeScript</span><span class="dot-separator"></span></li>
+        <li class="skill-item"><span dir="ltr">Node.js</span><span class="dot-separator"></span></li>
+        <li class="skill-item"><span dir="ltr">Distributed Systems</span><span class="dot-separator"></span></li>
+        <li class="skill-item"><span dir="ltr">PostgreSQL</span><span class="dot-separator"></span></li>
+      </ol>
+    </section>
+
+    <section class="bg-color-background-container accomplishments-section">
+      <h2>Accomplishments</h2>
+      <div id="accomplishment-section">
+        <ul class="accomplishment-list">
+          <div class="accomplishment-type certifications-section">
+            <div class="count-container">1</div>
+            <div class="detail-container collapsible-list-container">
+              <h3 class="sub-section-heading">Certifications</h3>
+              <ul>
+                <li class="sub-list-item visible-entity">
+                  <div class="list-item-body">
+                    <div class="list-item-heading body-small-bold" dir="ltr">AWS Certified Solutions Architect</div>
+                    <div class="list-item-detail">
+                      <div class="body-small description" dir="ltr">Amazon Web Services (AWS)</div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="accomplishment-type languages-section">
+            <div class="count-container">2</div>
+            <div class="detail-container collapsible-list-container">
+              <h3 class="sub-section-heading">Languages</h3>
+              <ul>
+                <li class="sub-list-item visible-entity">
+                  <div class="list-item-body">
+                    <div class="list-item-heading body-small-bold" dir="ltr">English</div>
+                    <div class="list-item-detail"><div class="body-small description" dir="ltr">Native or bilingual proficiency</div></div>
+                  </div>
+                </li>
+                <li class="sub-list-item visible-entity">
+                  <div class="list-item-body">
+                    <div class="list-item-heading body-small-bold" dir="ltr">French</div>
+                    <div class="list-item-detail"><div class="body-small description" dir="ltr">Professional working proficiency</div></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="accomplishment-type projects-section">
+            <div class="count-container">1</div>
+            <div class="detail-container collapsible-list-container">
+              <h3 class="sub-section-heading">Projects</h3>
+              <ul>
+                <li class="sub-list-item visible-entity">
+                  <div class="list-item-body">
+                    <div class="list-item-heading body-small-bold" dir="ltr">OpenTrace</div>
+                    <div class="list-item-detail"><div class="body-small description" dir="ltr">An open-source distributed tracing helper.</div></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Padding so the fixture is a realistic size for the client's checks. -->
+    <div hidden>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+      <span>LinkedIn ships a lot of markup that carries no profile data at all.</span>
+    </div>
+  </body>
+</html>

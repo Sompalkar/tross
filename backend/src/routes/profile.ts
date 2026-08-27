@@ -20,7 +20,6 @@ const flag = z
 const querySchema = z.object({
   url: z.string().min(1, "`url` is required.").max(500, "`url` is too long."),
   refresh: flag,
-  contactInfo: flag,
 });
 
 const bodySchema = querySchema;
@@ -31,8 +30,8 @@ profileRouter.get("/profile", requireApiKey, async (req, res) => {
   if (!parsed.success) {
     throw ApiError.badRequest("Invalid query parameters.", z.treeifyError(parsed.error));
   }
-  const { url, refresh, contactInfo } = parsed.data;
-  res.json(await getProfile(url, { refresh, includeContactInfo: contactInfo }));
+  const { url, refresh } = parsed.data;
+  res.json(await getProfile(url, { refresh }));
 });
 
 /** POST /api/profile { "url": "..." } — same thing, for clients that prefer a body. */
@@ -41,6 +40,6 @@ profileRouter.post("/profile", requireApiKey, async (req, res) => {
   if (!parsed.success) {
     throw ApiError.badRequest("Invalid request body.", z.treeifyError(parsed.error));
   }
-  const { url, refresh, contactInfo } = parsed.data;
-  res.json(await getProfile(url, { refresh, includeContactInfo: contactInfo }));
+  const { url, refresh } = parsed.data;
+  res.json(await getProfile(url, { refresh }));
 });

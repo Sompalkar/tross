@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { ProfileView } from "@/components/ProfileView";
+import { Label } from "@/components/ui";
 import type { ProfileResult, ProfileSuccess } from "@/lib/types";
 
-const EXAMPLE = "https://www.linkedin.com/in/ada-lovelace";
+const EXAMPLES = ["williamhgates", "satyanadella"];
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -12,8 +13,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileSuccess | null>(null);
 
-  async function lookup(event: React.FormEvent) {
-    event.preventDefault();
+  async function lookup(value: string) {
+    if (!value.trim() || loading) return;
+
     setLoading(true);
     setError(null);
     setProfile(null);
@@ -22,7 +24,7 @@ export default function Home() {
       const response = await fetch("/api/lookup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: value }),
       });
       const result = (await response.json()) as ProfileResult;
 
@@ -35,67 +37,144 @@ export default function Home() {
     }
   }
 
+  // Not named `useExample`: a `use` prefix marks a function as a React hook,
+  // and this is an ordinary event handler.
+  function runExample(slug: string) {
+    const example = `https://www.linkedin.com/in/${slug}`;
+    setUrl(example);
+    void lookup(example);
+  }
+
   return (
-    <main className="mx-auto min-h-screen w-full max-w-3xl px-4 py-12">
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          LinkedIn Profile API
-        </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Paste a public LinkedIn profile URL. The API reads it through LinkedIn&apos;s
-          internal Voyager endpoints and returns structured JSON.
-        </p>
+    <div className="min-h-dvh">
+      <header className="sticky top-0 z-10 border-b border-rule bg-ground/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:gap-5">
+          <div className="flex shrink-0 items-baseline gap-2">
+            <span className="font-mono text-[13px] font-medium tracking-tight text-ink">
+              profile-api
+            </span>
+            <span className="font-mono text-[11px] text-mute">v1</span>
+          </div>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void lookup(url);
+            }}
+            className="flex flex-1 items-center gap-2"
+          >
+            <input
+              type="text"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="linkedin.com/in/…"
+              aria-label="LinkedIn profile URL"
+              spellCheck={false}
+              className="min-w-0 flex-1 rounded-lg border border-rule bg-surface px-3 py-2 font-mono text-[13px] text-ink outline-none placeholder:text-mute focus:border-accent"
+            />
+            <button
+              type="submit"
+              disabled={loading || !url.trim()}
+              className="shrink-0 rounded-lg bg-accent px-4 py-2 text-[13px] font-medium text-accent-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {loading ? "Fetching" : "Fetch"}
+            </button>
+          </form>
+        </div>
       </header>
 
-      <form onSubmit={lookup} className="mb-8 flex flex-col gap-3 sm:flex-row">
-        <input
-          type="text"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          placeholder={EXAMPLE}
-          aria-label="LinkedIn profile URL"
-          className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-sky-900"
-        />
-        <button
-          type="submit"
-          disabled={loading || !url.trim()}
-          className="rounded-xl bg-sky-600 px-6 py-3 font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? "Fetching…" : "Fetch profile"}
-        </button>
-      </form>
+      <main className="mx-auto max-w-3xl px-5 pt-10 pb-24">
+        {!profile && !loading && !error && (
+          <Intro onPick={runExample} disabled={loading} />
+        )}
 
-      <button
-        type="button"
-        onClick={() => setUrl(EXAMPLE)}
-        className="mb-8 text-sm text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
-      >
-        Use the example URL
-      </button>
+        {error && (
+          <div
+            role="alert"
+            className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3.5"
+          >
+            <div className="mb-1">
+              <Label>Request failed</Label>
+            </div>
+            <p className="text-[14px] leading-relaxed text-danger">{error}</p>
+          </div>
+        )}
 
-      {error && (
-        <div
-          role="alert"
-          className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
-        >
-          {error}
-        </div>
-      )}
+        {loading && <Skeleton />}
 
-      {loading && <SkeletonCard />}
-
-      {profile && <ProfileView result={profile} />}
-    </main>
+        {profile && <ProfileView result={profile} />}
+      </main>
+    </div>
   );
 }
 
-function SkeletonCard() {
+function Intro({
+  onPick,
+  disabled,
+}: {
+  onPick: (slug: string) => void;
+  disabled: boolean;
+}) {
   return (
-    <div className="animate-pulse space-y-4 rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
-      <div className="h-24 w-24 rounded-full bg-slate-200 dark:bg-slate-800" />
-      <div className="h-6 w-48 rounded bg-slate-200 dark:bg-slate-800" />
-      <div className="h-4 w-72 rounded bg-slate-200 dark:bg-slate-800" />
-      <div className="h-4 w-56 rounded bg-slate-200 dark:bg-slate-800" />
+    <div className="flex flex-col gap-10 pt-6">
+      <div className="flex flex-col gap-3">
+        <h1 className="max-w-[20ch] font-serif text-[40px] leading-[1.05] tracking-[-0.015em] text-ink sm:text-[52px]">
+          A LinkedIn profile, as structured JSON.
+        </h1>
+        <p className="max-w-[56ch] text-[16px] leading-relaxed text-soft">
+          Paste a profile URL. The API reads the page the way LinkedIn&apos;s own
+          mobile site does, then returns name, headline, location, about,
+          experience, education, skills, certifications, languages and images.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Label>Try one</Label>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLES.map((slug) => (
+            <button
+              key={slug}
+              type="button"
+              onClick={() => onPick(slug)}
+              disabled={disabled}
+              className="rounded-lg border border-rule bg-surface px-3 py-1.5 font-mono text-[12px] text-soft transition-colors hover:border-accent hover:text-ink disabled:opacity-50"
+            >
+              /in/{slug}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-rule pt-8">
+        <div className="mb-3">
+          <Label>Endpoint</Label>
+        </div>
+        <pre className="overflow-x-auto rounded-lg border border-rule bg-raised p-4 font-mono text-[12px] leading-relaxed text-soft">
+{`curl -G https://your-api.example.com/api/profile \\
+  --data-urlencode "url=https://www.linkedin.com/in/williamhgates"`}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div className="flex animate-pulse flex-col gap-6" aria-hidden>
+      <div className="h-28 rounded-xl bg-raised sm:h-36" />
+      <div className="-mt-14 px-1">
+        <div className="size-[72px] rounded-2xl bg-raised ring-4 ring-ground sm:size-[88px]" />
+      </div>
+      <div className="flex flex-col gap-3">
+        <div className="h-9 w-56 rounded bg-raised" />
+        <div className="h-4 w-80 max-w-full rounded bg-raised" />
+        <div className="h-3 w-44 rounded bg-raised" />
+      </div>
+      <div className="mt-4 flex flex-col gap-3 border-t border-rule pt-6">
+        <div className="h-3 w-24 rounded bg-raised" />
+        <div className="h-4 w-full rounded bg-raised" />
+        <div className="h-4 w-4/5 rounded bg-raised" />
+      </div>
     </div>
   );
 }

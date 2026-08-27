@@ -1,17 +1,16 @@
 import type { LinkedInProfile, ProfileSuccess } from "@/lib/types";
-import { Empty, Meta, Pill, Section, Thumb } from "./ui";
+import { Chip, Label, Muted, Row, Rows, Section, Thumb } from "./ui";
 
 export function ProfileView({ result }: { result: ProfileSuccess }) {
   const profile = result.data;
 
   return (
-    <div className="space-y-6">
-      <MetaBar result={result} />
-      <Header profile={profile} />
+    <article className="flex flex-col gap-8">
+      <Identity profile={profile} meta={result.meta} />
 
       {profile.summary && (
         <Section title="About">
-          <p className="whitespace-pre-line text-slate-700 dark:text-slate-300">
+          <p className="max-w-[62ch] text-[15px] leading-relaxed whitespace-pre-line text-soft">
             {profile.summary}
           </p>
         </Section>
@@ -19,24 +18,24 @@ export function ProfileView({ result }: { result: ProfileSuccess }) {
 
       <Section title="Experience" count={profile.experience.length}>
         {profile.experience.length === 0 ? (
-          <Empty>Nothing listed.</Empty>
+          <Empty />
         ) : (
-          <ol className="space-y-6">
+          <Rows>
             {profile.experience.map((position, index) => (
-              <li key={index} className="flex gap-4">
+              <Row key={index}>
                 <Thumb
                   src={position.companyLogo?.original}
                   alt=""
                   fallback={initials(position.companyName)}
                 />
-                <div className="min-w-0">
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[15px] font-medium text-ink">
                     {position.title ?? "—"}
-                  </p>
-                  <p className="text-slate-700 dark:text-slate-300">
+                  </h3>
+                  <p className="text-[14px] text-soft">
                     {position.companyLinkedInUrl && position.companyName ? (
                       <a
-                        className="hover:underline"
+                        className="underline decoration-rule underline-offset-2 hover:decoration-accent"
                         href={position.companyLinkedInUrl}
                         target="_blank"
                         rel="noreferrer noopener"
@@ -46,249 +45,254 @@ export function ProfileView({ result }: { result: ProfileSuccess }) {
                     ) : (
                       position.companyName
                     )}
-                    {position.employmentType && ` · ${position.employmentType}`}
+                    {position.employmentType && (
+                      <span className="text-mute"> · {position.employmentType}</span>
+                    )}
                   </p>
-                  <Meta>
-                    {[position.dateRange?.text, position.location]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </Meta>
+                  <div className="mt-1.5 flex flex-wrap gap-x-3">
+                    {position.dateRange?.text && <Muted>{position.dateRange.text}</Muted>}
+                    {position.location && <Muted>{position.location}</Muted>}
+                  </div>
                   {position.description && (
-                    <p className="mt-2 whitespace-pre-line text-sm text-slate-600 dark:text-slate-400">
+                    <p className="mt-2.5 max-w-[60ch] text-[14px] leading-relaxed whitespace-pre-line text-soft">
                       {position.description}
                     </p>
                   )}
                 </div>
-              </li>
+              </Row>
             ))}
-          </ol>
+          </Rows>
         )}
       </Section>
 
       <Section title="Education" count={profile.education.length}>
         {profile.education.length === 0 ? (
-          <Empty>Nothing listed.</Empty>
+          <Empty />
         ) : (
-          <ol className="space-y-6">
+          <Rows>
             {profile.education.map((school, index) => (
-              <li key={index} className="flex gap-4">
+              <Row key={index}>
                 <Thumb
                   src={school.schoolLogo?.original}
                   alt=""
                   fallback={initials(school.schoolName)}
                 />
-                <div className="min-w-0">
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[15px] font-medium text-ink">
                     {school.schoolName ?? "—"}
-                  </p>
-                  <p className="text-slate-700 dark:text-slate-300">
-                    {[school.degreeName, school.fieldOfStudy].filter(Boolean).join(", ")}
-                  </p>
-                  <Meta>
-                    {[school.dateRange?.text, school.grade && `Grade: ${school.grade}`]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </Meta>
-                  {school.activities && (
-                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                      {school.activities}
+                  </h3>
+                  {/* Many schools list no degree; an empty line beats a dash. */}
+                  {(school.degreeName ?? school.fieldOfStudy) && (
+                    <p className="text-[14px] text-soft">
+                      {[school.degreeName, school.fieldOfStudy].filter(Boolean).join(", ")}
                     </p>
                   )}
+                  <div className="mt-1.5 flex flex-wrap gap-x-3">
+                    {school.dateRange?.text && <Muted>{school.dateRange.text}</Muted>}
+                    {school.grade && <Muted>Grade {school.grade}</Muted>}
+                  </div>
                 </div>
-              </li>
+              </Row>
             ))}
-          </ol>
+          </Rows>
         )}
       </Section>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {profile.skills.length > 0 && (
         <Section title="Skills" count={profile.skills.length}>
-          {profile.skills.length === 0 ? (
-            <Empty>Nothing listed.</Empty>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {profile.skills.map((skill) => (
-                <Pill key={skill.name}>
-                  {skill.name}
-                  {skill.endorsementCount ? ` · ${skill.endorsementCount}` : ""}
-                </Pill>
-              ))}
-            </div>
-          )}
-        </Section>
-
-        <Section title="Languages" count={profile.languages.length}>
-          {profile.languages.length === 0 ? (
-            <Empty>Nothing listed.</Empty>
-          ) : (
-            <ul className="space-y-2">
-              {profile.languages.map((language, index) => (
-                <li key={index} className="text-slate-700 dark:text-slate-300">
-                  {language.name}
-                  {language.proficiency && (
-                    <span className="text-slate-500 dark:text-slate-400">
-                      {" "}
-                      — {language.proficiency}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
-      </div>
-
-      <Section title="Certifications" count={profile.certifications.length}>
-        {profile.certifications.length === 0 ? (
-          <Empty>Nothing listed.</Empty>
-        ) : (
-          <ul className="space-y-4">
-            {profile.certifications.map((certification, index) => (
-              <li key={index}>
-                <p className="font-medium text-slate-900 dark:text-slate-100">
-                  {certification.url ? (
-                    <a
-                      className="hover:underline"
-                      href={certification.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                    >
-                      {certification.name}
-                    </a>
-                  ) : (
-                    certification.name
-                  )}
-                </p>
-                <Meta>
-                  {[certification.authority, certification.dateRange?.start?.text]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </Meta>
-              </li>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.skills.map((skill) => (
+              <Chip key={skill.name}>{skill.name}</Chip>
             ))}
-          </ul>
-        )}
-      </Section>
+          </div>
+        </Section>
+      )}
+
+      {profile.certifications.length > 0 && (
+        <Section title="Certifications" count={profile.certifications.length}>
+          <Rows>
+            {profile.certifications.map((certification, index) => (
+              <Row key={index}>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[15px] font-medium text-ink">
+                    {certification.url ? (
+                      <a
+                        className="underline decoration-rule underline-offset-2 hover:decoration-accent"
+                        href={certification.url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        {certification.name}
+                      </a>
+                    ) : (
+                      certification.name
+                    )}
+                  </h3>
+                  {certification.authority && (
+                    <p className="text-[14px] text-soft">{certification.authority}</p>
+                  )}
+                  {certification.dateRange?.text && (
+                    <div className="mt-1.5">
+                      <Muted>{certification.dateRange.text}</Muted>
+                    </div>
+                  )}
+                </div>
+              </Row>
+            ))}
+          </Rows>
+        </Section>
+      )}
+
+      {profile.languages.length > 0 && (
+        <Section title="Languages" count={profile.languages.length}>
+          <Rows>
+            {profile.languages.map((language, index) => (
+              <Row key={index}>
+                <div className="flex flex-1 flex-wrap items-baseline justify-between gap-x-4">
+                  <span className="text-[15px] text-ink">{language.name}</span>
+                  {language.proficiency && <Muted>{language.proficiency}</Muted>}
+                </div>
+              </Row>
+            ))}
+          </Rows>
+        </Section>
+      )}
 
       {profile.projects.length > 0 && (
         <Section title="Projects" count={profile.projects.length}>
-          <ul className="space-y-4">
+          <Rows>
             {profile.projects.map((project, index) => (
-              <li key={index}>
-                <p className="font-medium text-slate-900 dark:text-slate-100">
-                  {project.title}
-                </p>
-                <Meta>{project.dateRange?.text}</Meta>
-                {project.description && (
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    {project.description}
-                  </p>
-                )}
-              </li>
+              <Row key={index}>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[15px] font-medium text-ink">{project.title}</h3>
+                  {project.dateRange?.text && (
+                    <div className="mt-1">
+                      <Muted>{project.dateRange.text}</Muted>
+                    </div>
+                  )}
+                  {project.description && (
+                    <p className="mt-2 max-w-[60ch] text-[14px] leading-relaxed text-soft">
+                      {project.description}
+                    </p>
+                  )}
+                </div>
+              </Row>
             ))}
-          </ul>
+          </Rows>
         </Section>
       )}
 
       {profile.volunteerExperience.length > 0 && (
         <Section title="Volunteering" count={profile.volunteerExperience.length}>
-          <ul className="space-y-4">
+          <Rows>
             {profile.volunteerExperience.map((entry, index) => (
-              <li key={index}>
-                <p className="font-medium text-slate-900 dark:text-slate-100">
-                  {entry.role} · {entry.companyName}
-                </p>
-                <Meta>{[entry.dateRange?.text, entry.cause].filter(Boolean).join(" · ")}</Meta>
-              </li>
+              <Row key={index}>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[15px] font-medium text-ink">{entry.role}</h3>
+                  <p className="text-[14px] text-soft">{entry.companyName}</p>
+                  {entry.dateRange?.text && (
+                    <div className="mt-1.5">
+                      <Muted>{entry.dateRange.text}</Muted>
+                    </div>
+                  )}
+                </div>
+              </Row>
             ))}
-          </ul>
+          </Rows>
         </Section>
       )}
 
-      <Section title="Raw JSON">
-        <pre className="max-h-96 overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-relaxed text-slate-200">
-          {JSON.stringify(result, null, 2)}
-        </pre>
+      <Section title="Raw response">
+        <details className="group">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[12px] text-soft hover:text-ink">
+            <span className="text-mute transition-transform group-open:rotate-90">›</span>
+            {JSON.stringify(result).length.toLocaleString("en-US")} bytes of JSON
+          </summary>
+          <pre className="mt-4 max-h-[28rem] overflow-auto rounded-lg border border-rule bg-raised p-4 font-mono text-[12px] leading-relaxed text-soft">
+            {JSON.stringify(result, null, 2)}
+          </pre>
+        </details>
       </Section>
-    </div>
+    </article>
   );
 }
 
-function MetaBar({ result }: { result: ProfileSuccess }) {
-  const { meta } = result;
-  return (
-    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-      <span className="rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800">
-        source: {meta.source}
-      </span>
-      <span className="rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800">
-        {meta.cached ? "served from cache" : "fresh"}
-      </span>
-      <span className="rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800">
-        {meta.durationMs} ms
-      </span>
-    </div>
-  );
+function Empty() {
+  return <p className="font-mono text-[12px] text-mute">Not listed on this profile.</p>;
 }
 
-function Header({ profile }: { profile: LinkedInProfile }) {
+function Identity({
+  profile,
+  meta,
+}: {
+  profile: LinkedInProfile;
+  meta: ProfileSuccess["meta"];
+}) {
   const cover = profile.backgroundPicture?.original;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      {/* The gradient stays behind the cover image, so an expired LinkedIn
-          URL degrades to a plain banner rather than an empty grey strip. */}
-      <div
-        className="h-28 bg-gradient-to-r from-sky-500 to-indigo-500 bg-cover bg-center"
-        style={
-          cover
-            ? {
-                backgroundImage: `url(${cover}), linear-gradient(to right, #0ea5e9, #6366f1)`,
-              }
-            : undefined
-        }
-      />
-      <div className="px-6 pb-6">
-        <div className="-mt-12 mb-4">
-          <Thumb
-            src={profile.profilePicture?.original}
-            alt={profile.fullName ?? "Profile picture"}
-            fallback={initials(profile.fullName)}
-            rounded="rounded-full"
-            size="h-24 w-24 text-xl ring-4 ring-white dark:ring-slate-900"
-          />
-        </div>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          {profile.fullName ?? "Unknown"}
-        </h1>
-        {profile.headline && (
-          <p className="mt-1 text-slate-700 dark:text-slate-300">{profile.headline}</p>
-        )}
-        <Meta>
-          {[profile.location.full, profile.industry].filter(Boolean).join(" · ")}
-        </Meta>
-        <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          {profile.connectionsCount !== null && (
-            <Pill>{profile.connectionsCount}+ connections</Pill>
-          )}
-          {profile.followersCount !== null && (
-            <Pill>{profile.followersCount} followers</Pill>
-          )}
-          {profile.isOpenToWork && <Pill>Open to work</Pill>}
-          {profile.isHiring && <Pill>Hiring</Pill>}
-        </div>
-        {profile.profileUrl && (
-          <a
-            className="mt-4 inline-block text-sm text-sky-700 hover:underline dark:text-sky-400"
-            href={profile.profileUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            View on LinkedIn ↗
-          </a>
+    <header>
+      {/* A flat band when there is no cover image — never an invented gradient. */}
+      <div className="relative h-28 overflow-hidden rounded-xl border border-rule bg-raised sm:h-36">
+        {cover && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cover} alt="" className="size-full object-cover" />
         )}
       </div>
-    </div>
+
+      {/* `relative` matters: the cover above is positioned, so without it the
+          cover paints over the overlapping avatar and clips its top half. */}
+      <div className="relative -mt-9 px-1 sm:-mt-11">
+        <Thumb
+          src={profile.profilePicture?.original}
+          alt={profile.fullName ?? "Profile picture"}
+          fallback={initials(profile.fullName)}
+          className="size-[72px] rounded-2xl bg-raised text-[15px] ring-4 ring-ground sm:size-[88px]"
+        />
+
+        <h1 className="mt-4 font-serif text-[34px] leading-[1.1] tracking-[-0.01em] text-ink sm:text-[42px]">
+          {profile.fullName ?? "Unknown"}
+        </h1>
+
+        {profile.headline && (
+          <p className="mt-1.5 max-w-[52ch] text-[15px] leading-snug text-soft">
+            {profile.headline}
+          </p>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {profile.location.full && <Muted>{profile.location.full}</Muted>}
+          {profile.followersCount !== null && (
+            <Muted>{profile.followersCount.toLocaleString("en-US")} followers</Muted>
+          )}
+          {profile.connectionsCount !== null && (
+            <Muted>{profile.connectionsCount.toLocaleString("en-US")}+ connections</Muted>
+          )}
+          {profile.isOpenToWork && <Chip>Open to work</Chip>}
+          {profile.isHiring && <Chip>Hiring</Chip>}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {profile.profileUrl && (
+            <a
+              className="font-mono text-[12px] text-accent underline decoration-transparent underline-offset-4 hover:decoration-current"
+              href={profile.profileUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              View on LinkedIn ↗
+            </a>
+          )}
+          <span className="flex items-center gap-2">
+            <Label>{meta.source}</Label>
+            <span className="text-rule">/</span>
+            <Label>{meta.cached ? "cached" : "fresh"}</Label>
+            <span className="text-rule">/</span>
+            <Label>{meta.durationMs} ms</Label>
+          </span>
+        </div>
+      </div>
+    </header>
   );
 }
 

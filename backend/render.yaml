@@ -15,9 +15,7 @@ services:
         value: production
       - key: MOCK_MODE
         value: "false"
-      - key: LINKEDIN_LI_AT
-        sync: false
-      - key: LINKEDIN_JSESSIONID
+      - key: LINKEDIN_COOKIE
         sync: false
       - key: API_KEY
         sync: false

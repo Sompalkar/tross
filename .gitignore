@@ -14,6 +14,10 @@ build/
 .env.*
 !.env.example
 
+# captured browser requests (contain session cookies)
+capture*.txt
+*.har
+
 # logs
 *.log
 npm-debug.log*

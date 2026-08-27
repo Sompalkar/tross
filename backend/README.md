@@ -20,11 +20,11 @@ curl "http://localhost:4000/api/profile?url=https://www.linkedin.com/in/ada-love
 
 Where to look:
 
-- [`src/linkedin/client.ts`](src/linkedin/client.ts) — the Voyager client, and
-  the three headers that make LinkedIn answer.
-- [`src/linkedin/normalize.ts`](src/linkedin/normalize.ts) — LinkedIn's raw JSON
-  turned into our schema.
+- [`src/linkedin/client.ts`](src/linkedin/client.ts) — fetches the mwlite page:
+  the full cookie header and the jar that survives LinkedIn's token rotation.
+- [`src/linkedin/parse.ts`](src/linkedin/parse.ts) — mwlite HTML turned into our
+  schema.
 - [`src/types/profile.ts`](src/types/profile.ts) — the response schema.
 
 Never commit `.env`. See
-[Getting your LinkedIn cookies](../README.md#4-getting-your-linkedin-cookies).
+[Getting your LinkedIn cookie](../README.md#5-getting-your-linkedin-cookie).

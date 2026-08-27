@@ -1,20 +1,88 @@
 @import "tailwindcss";
 
+/*
+  One set of design tokens, defined once in :root and redefined for dark mode.
+  Every component reads them through Tailwind (bg-surface, text-mute, ...) so
+  no component ever hard-codes a colour that only works in one theme.
+*/
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --ground: #f4f5f4;
+  --surface: #ffffff;
+  --raised: #eaedeb;
+  --ink: #111413;
+  --soft: #474d4a;
+  --mute: #767c79;
+  --rule: #dee2e0;
+  --rule-soft: #e9ecea;
+  --accent: #14603c;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2efe8;
+  --danger: #8c2f22;
+  --danger-soft: #f6e6e2;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #020617;
-    --foreground: #e2e8f0;
+    --ground: #0b0c0c;
+    --surface: #131615;
+    --raised: #1b1f1d;
+    --ink: #e9ebea;
+    --soft: #b0b6b3;
+    --mute: #7d8481;
+    --rule: #242827;
+    --rule-soft: #1c201f;
+    --accent: #57be8b;
+    --accent-ink: #07110c;
+    --accent-soft: #11241b;
+    --danger: #e09480;
+    --danger-soft: #2a1712;
   }
 }
 
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-soft: var(--soft);
+  --color-mute: var(--mute);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --font-sans: var(--font-grotesk);
+  --font-serif: var(--font-instrument);
+  --font-mono: var(--font-plex-mono);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
-    sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* A visible, consistent focus ring everywhere. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
