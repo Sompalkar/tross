@@ -23,20 +23,24 @@ export function errorHandler(
       : new ApiError(
           500,
           "INTERNAL_ERROR",
-          env.NODE_ENV === "production"
-            ? "Something went wrong."
-            : error instanceof Error
+          env.NODE_ENV === "development"
+            ? error instanceof Error
               ? error.message
-              : String(error),
+              : String(error)
+            : "Something went wrong.",
         );
 
   if (apiError.status >= 500) logger.error({ err: error }, "request failed");
   else logger.warn({ code: apiError.code, msg: apiError.message }, "request rejected");
 
   // `details` can carry a slice of LinkedIn's own error body (a challenge page,
-  // an internal payload). Useful while developing, never worth exposing to the
-  // public internet — so it is logged in production instead of returned.
-  const exposeDetails = apiError.details && env.NODE_ENV !== "production";
+  // an internal payload), so it is logged rather than returned.
+  //
+  // The check is "is development" rather than "is not production" on purpose.
+  // A host that never sets NODE_ENV should get the safe behaviour, not the
+  // leaky one — and that is not hypothetical: this API was deployed with
+  // NODE_ENV unset, which under the old check would have exposed them.
+  const exposeDetails = Boolean(apiError.details) && env.NODE_ENV === "development";
   if (apiError.details && !exposeDetails) {
     logger.warn({ code: apiError.code, details: apiError.details }, "upstream detail");
   }

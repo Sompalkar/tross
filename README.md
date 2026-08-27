@@ -591,12 +591,29 @@ Deliberate choices, since the API holds a live LinkedIn session:
   `/in/` paths are accepted; the extracted slug is rejected if it decodes to
   path syntax, and re-encoded before it reaches LinkedIn.
 - **API keys are compared in constant time.**
-- **Upstream error details are not echoed to clients in production.**
+- **Upstream error details are only ever returned when `NODE_ENV=development`.**
+  The check is deliberately "is development" rather than "is not production":
+  a host that never sets `NODE_ENV` gets the safe behaviour by default.
 - **The rate limit sees real client IPs.** The frontend calls the API directly
   rather than through a server-side proxy, so the per-IP limit applies per
   visitor instead of lumping every browser user under one address.
 - **`capture*.txt` and `*.har` are git-ignored**, because a copied cURL command
   or a HAR export carries the whole cookie header.
+- **`GET /api/health` reports the environment, rate limit and CORS setting**, so
+  a deployment that silently missed its environment variables can be spotted
+  from outside rather than discovered later.
+
+### Lock CORS down once the frontend is deployed
+
+With `CORS_ORIGINS=*` the API reflects any origin, so any website's JavaScript
+can call it from *its own visitors'* browsers. There is no session to steal —
+the API takes no cookies from callers — but each visitor is a different IP, so
+that spreads the per-IP rate limit across thousands of addresses and spends the
+LinkedIn account's quota.
+
+Set `CORS_ORIGINS` to the frontend's domain. `curl` and Postman are unaffected,
+because CORS is enforced by browsers, not servers — so a reviewer can still
+call the API directly.
 
 ### Should the hosted API require a key?
 
