@@ -2,6 +2,20 @@
 
 import { useState, type ReactNode } from "react";
 
+/** Small uppercase monospace label. Used for section names and metadata. */
+export function Label({ children }: { children: ReactNode }) {
+  return (
+    <span className="font-mono text-[11px] font-medium uppercase tracking-[0.09em] text-mute">
+      {children}
+    </span>
+  );
+}
+
+/**
+ * A section of the profile. Deliberately not a card — a labelled band with a
+ * hairline above it reads as one continuous document rather than a pile of
+ * floating boxes.
+ */
 export function Section({
   title,
   count,
@@ -12,61 +26,67 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
-        {title}
-        {count !== undefined && (
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-            {count}
+    <section className="border-t border-rule pt-6">
+      <header className="mb-5 flex items-baseline gap-2">
+        <Label>{title}</Label>
+        {count !== undefined && count > 0 && (
+          <span className="font-mono text-[11px] tabular-nums text-mute">
+            {String(count).padStart(2, "0")}
           </span>
         )}
-      </h2>
+      </header>
       {children}
     </section>
   );
 }
 
-export function Pill({ children }: { children: ReactNode }) {
+/** Rows separated by hairlines rather than gaps. */
+export function Rows({ children }: { children: ReactNode }) {
+  return <ul className="flex flex-col">{children}</ul>;
+}
+
+export function Row({ children }: { children: ReactNode }) {
   return (
-    <span className="rounded-full bg-sky-50 px-3 py-1 text-sm text-sky-800 ring-1 ring-sky-200 dark:bg-sky-950 dark:text-sky-200 dark:ring-sky-900">
+    <li className="flex gap-4 border-b border-rule-soft py-4 first:pt-0 last:border-b-0 last:pb-0">
+      {children}
+    </li>
+  );
+}
+
+export function Chip({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-md border border-rule bg-surface px-2.5 py-1 font-mono text-[12px] text-soft">
       {children}
     </span>
   );
 }
 
-export function Meta({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-slate-500 dark:text-slate-400">{children}</p>;
-}
-
-export function Empty({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-slate-400 dark:text-slate-500">{children}</p>;
+export function Muted({ children }: { children: ReactNode }) {
+  return <p className="font-mono text-[12px] tabular-nums text-mute">{children}</p>;
 }
 
 /**
  * LinkedIn image URLs are signed and expire, so there is nothing for Next's
- * image optimizer to do with them — a plain <img> is the honest choice here.
- * Expired or blocked URLs fall back to a neutral placeholder instead of
- * rendering a broken image.
+ * image optimizer to do with them. Expired or blocked URLs fall back to
+ * initials rather than rendering a broken image.
  */
 export function Thumb({
   src,
   alt,
   fallback,
-  rounded = "rounded-lg",
-  size = "h-12 w-12",
+  className = "size-10 rounded-lg",
 }: {
   src: string | null | undefined;
   alt: string;
   fallback?: string;
-  rounded?: string;
-  size?: string;
+  className?: string;
 }) {
   const [failed, setFailed] = useState(false);
 
   if (!src || failed) {
     return (
       <div
-        className={`${size} ${rounded} flex shrink-0 items-center justify-center bg-slate-200 text-sm font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400`}
+        className={`${className} flex shrink-0 items-center justify-center border border-rule bg-raised font-mono text-[11px] text-mute`}
         aria-hidden
       >
         {fallback ?? ""}
@@ -80,7 +100,7 @@ export function Thumb({
       src={src}
       alt={alt}
       onError={() => setFailed(true)}
-      className={`${size} ${rounded} shrink-0 object-cover ring-1 ring-slate-200 dark:ring-slate-700`}
+      className={`${className} shrink-0 border border-rule object-cover`}
     />
   );
 }
