@@ -505,7 +505,7 @@ Then set the backend's `CORS_ORIGINS` to your Vercel domain to close it off.
 
 ```bash
 cd backend
-npm test        # 32 tests: URL parsing, HTML parsing, and the HTTP API
+npm test        # 33 tests: URL parsing, HTML parsing, and the HTTP API
 npm run typecheck
 ```
 
