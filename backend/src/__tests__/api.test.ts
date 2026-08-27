@@ -79,6 +79,14 @@ describe("the HTTP API", () => {
     assert.equal(body.error.code, "BAD_REQUEST");
   });
 
+  it("treats a page with no name as no profile", async () => {
+    // LinkedIn serves 200 with a generic page for an unknown slug, so the
+    // absence of a name is what separates "no such profile" from a real hit.
+    const { parseProfileHtml } = await import("../linkedin/parse.js");
+    const parsed = parseProfileHtml("<html><body><div>nothing</div></body></html>", "nobody");
+    assert.equal(parsed.fullName, null);
+  });
+
   it("404s an unknown route", async () => {
     const response = await fetch(`${baseUrl}/api/nope`, { headers });
     assert.equal(response.status, 404);

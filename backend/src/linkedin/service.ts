@@ -7,6 +7,7 @@ import { TtlCache } from "../utils/cache.js";
 import { fetchProfileHtml, fetchPublicProfileHtml, toApiError } from "./client.js";
 import { parseProfileHtml } from "./parse.js";
 import { extractPublicIdentifier } from "./url.js";
+import { ApiError } from "../utils/errors.js";
 import type { LinkedInProfile, ProfileResponse } from "../types/profile.js";
 
 const cache = new TtlCache<LinkedInProfile>(env.CACHE_TTL_SECONDS);
@@ -72,7 +73,19 @@ async function fetchFromLinkedIn(
       fetchProfileHtml(publicIdentifier),
       fetchPublicProfileHtml(publicIdentifier),
     ]);
-    return parseProfileHtml(html, publicIdentifier, publicHtml);
+
+    const profile = parseProfileHtml(html, publicIdentifier, publicHtml);
+
+    // LinkedIn answers 200 with a generic page for a slug that does not exist,
+    // so a bad URL would otherwise come back as `success: true` and a body of
+    // nulls. Every real profile has a name — no name means no profile.
+    if (!profile.fullName) {
+      throw ApiError.notFound(
+        "LinkedIn has no profile at that URL, or it is not visible to the logged-in account.",
+      );
+    }
+
+    return profile;
   } catch (error) {
     logger.warn({ publicIdentifier, err: error }, "profile fetch failed");
     throw toApiError(error);
