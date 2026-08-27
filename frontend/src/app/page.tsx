@@ -156,8 +156,10 @@ function Intro({
         <div className="mb-3">
           <Label>Endpoint</Label>
         </div>
+        {/* Shows the API this build actually talks to, so the snippet is
+            always copy-pasteable rather than a placeholder. */}
         <pre className="overflow-x-auto rounded-lg border border-rule bg-raised p-4 font-mono text-[12px] leading-relaxed text-soft">
-{`curl -G https://your-api.example.com/api/profile \\
+{`curl -G ${API_BASE_URL}/api/profile \\
   --data-urlencode "url=https://www.linkedin.com/in/williamhgates"`}
         </pre>
       </div>
