@@ -37,12 +37,13 @@ GET /api/profile?url=https://www.linkedin.com/in/williamhgates
 5. [Getting your LinkedIn cookie](#5-getting-your-linkedin-cookie)
 6. [API documentation](#6-api-documentation)
 7. [Response schema](#7-response-schema)
-8. [Project layout](#8-project-layout)
-9. [Deploying](#9-deploying)
-10. [Testing](#10-testing)
-11. [Security notes](#11-security-notes)
-12. [Known limitations](#12-known-limitations)
-13. [Legal and ethical note](#13-legal-and-ethical-note)
+8. [How this compares to the reference tool](#8-how-this-compares-to-the-reference-tool)
+9. [Project layout](#9-project-layout)
+10. [Deploying](#10-deploying)
+11. [Testing](#11-testing)
+12. [Security notes](#12-security-notes)
+13. [Known limitations](#13-known-limitations)
+14. [Legal and ethical note](#14-legal-and-ethical-note)
 
 ---
 
@@ -417,7 +418,9 @@ about missing data.
     "honors": [ … ], "courses": [ … ], "organizations": [ … ],
     "publications": [ … ], "patents": [ … ], "testScores": [ … ],
 
+    "connectionDegree": "3rd",
     "industry": null, "isStudent": null, "isPremium": null,
+    "profileId": null,
     "contactInfo": null
   }
 }
@@ -430,10 +433,54 @@ Two notes on honesty:
 
 - `dateRange.text` reuses LinkedIn's own wording for the duration rather than
   recomputing it, so the API never disagrees with the site.
+- `profileId` is always `null`. mwlite does embed a member URN, but it is the
+  *viewer's* — byte-identical across different people's profiles — and the
+  page's other URNs belong to "people also viewed". A confident wrong id is
+  worse than an honest empty one.
 - Fields mwlite does not carry (`industry`, `countryCode`, `isPremium`,
   `endorsementCount`) are `null` rather than guessed at.
 
-## 8. Project layout
+## 8. How this compares to the reference tool
+
+The brief points at PhantomBuster's LinkedIn Profile Scraper as inspiration, so
+it is worth being precise about where this lands next to it.
+
+**PhantomBuster returns a flat CSV row — about 44 columns.** That shape is built
+for spreadsheets and CRMs, and it forces a choice: one column per value means a
+fixed number of jobs. Their own documentation is explicit about the cost —
+*"only scrapes the two most recent positions"*, and *"doesn't extract profile
+pictures"*; for full history and images they direct you to a second product.
+
+**This API returns nested JSON**, so it has no such ceiling.
+
+| | PhantomBuster Profile Scraper | This API |
+| --- | --- | --- |
+| Shape | Flat CSV, ~44 columns | Nested JSON |
+| Work history | 2 most recent positions | **All positions** |
+| Education | 2 most recent schools | **All schools** |
+| Profile picture | Not included | **Included**, with the cover image |
+| Skills | One label column | **Full list** |
+| Certifications, languages, projects, volunteering | Not included | **Included** |
+| Company logos, school logos | Not included | **Included** |
+| Connection degree, open-to-work, hiring | Included | Included |
+| Follower and connection counts | Included | Included |
+
+**What they have that this does not**, and why:
+
+- **`companyIndustry`, `companyWebsite`** — these are not on the profile page.
+  Getting them means a separate fetch per company, which multiplies requests
+  against a rate-limited account. Deliberately skipped; the company URL is
+  returned so a caller can follow it if they want to pay that cost.
+- **`professionalEmail`** — PhantomBuster resolves this through a third-party
+  enrichment API (Dropcontact, Hunter, Snov.io) that you supply a key for. It is
+  not LinkedIn data at all, so it is out of scope for a LinkedIn scraper.
+- **`linkedinProfileUrn`** — see the note on `profileId` in
+  [section 7](#7-response-schema): mwlite's member URN belongs to the *viewer*,
+  not the profile, so this API returns `null` rather than a confident wrong id.
+- **`mutualConnectionsUrl`, `connectionsUrl`** — trivially derivable from the
+  profile URL, and not worth carrying as fields.
+
+## 9. Project layout
 
 ```
 backend/
@@ -467,7 +514,7 @@ frontend/
 Both apps were scaffolded with their official tools (`create-next-app` for the
 frontend, `npm init` + `tsc --init` for the backend).
 
-## 9. Deploying
+## 10. Deploying
 
 ### Backend on Render
 
@@ -506,11 +553,11 @@ key must never be set this way.
 Then set the backend's `CORS_ORIGINS` to your Vercel domain to stop other sites
 calling it from a browser.
 
-## 10. Testing
+## 11. Testing
 
 ```bash
 cd backend
-npm test        # 33 tests: URL parsing, HTML parsing, and the HTTP API
+npm test        # 34 tests: URL parsing, HTML parsing, and the HTTP API
 npm run typecheck
 ```
 
@@ -527,7 +574,7 @@ The tests run entirely offline. They cover:
 
 Verified against live LinkedIn on several real profiles during development.
 
-## 11. Security notes
+## 12. Security notes
 
 Deliberate choices, since the API holds a live LinkedIn session:
 
@@ -559,7 +606,7 @@ Both work — it is `API_KEY` set or empty:
 If you leave it open, keep `RATE_LIMIT_MAX` low and treat the deployment as
 temporary.
 
-## 12. Known limitations
+## 13. Known limitations
 
 **Access**
 
@@ -601,7 +648,7 @@ temporary.
 - **`MOCK_MODE` data is synthetic**, so it proves the pipeline, not that every
   real-world quirk is handled.
 
-## 13. Legal and ethical note
+## 14. Legal and ethical note
 
 This was built for a hiring exercise. Two things worth stating plainly:
 

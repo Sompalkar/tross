@@ -471,6 +471,40 @@ const toCount = (raw: string | undefined): number | null => {
   return Number.isFinite(value) ? value : null;
 };
 
+/**
+ * mwlite hides a few structured values in <code> blocks whose contents are
+ * wrapped in an HTML comment, e.g.
+ *   <code id="memberUrn"><!--"urn:li:member:1149139140"--></code>
+ * These are the profile's own values, not the viewer's, and they are far more
+ * reliable than anything scraped out of the visible markup.
+ */
+function codeValue($: CheerioAPI, id: string): string | null {
+  const raw = $(`code#${id}`).first().html();
+  if (!raw) return null;
+  const inner = raw.replace(/^\s*<!--/, "").replace(/-->\s*$/, "").trim();
+  try {
+    const parsed = JSON.parse(inner);
+    return typeof parsed === "string" ? parsed : null;
+  } catch {
+    return clean(inner);
+  }
+}
+
+/**
+ * "1st" / "2nd" / "3rd" sits beside the name and says how far this profile is
+ * from the logged-in account. It is also the clearest signal of why a profile
+ * came back sparse: the further away, the less LinkedIn shows.
+ */
+function parseConnectionDegree($: CheerioAPI, basic: El): string | null {
+  let degree: string | null = null;
+  basic.find("span").each((_, node) => {
+    if (degree) return;
+    const text = clean($(node).text());
+    if (text && /^(1st|2nd|3rd)\+?$/.test(text)) degree = text;
+  });
+  return degree;
+}
+
 /* ────────────────────────── entry point ────────────────────────── */
 
 /**
@@ -515,7 +549,14 @@ export function parseProfileHtml(
   // draws the dot in CSS, so "Bachelor of Science · Computer Science" reaches
   // us as one run-on string. Turning the marker into real text first means
   // every parser below can just split on "·".
-  $(".dot-separator").replaceWith(" · ");
+  //
+  // Only the empty ones: the class is also used on elements that carry their
+  // own text — the connection degree is one — and replacing those would
+  // silently delete the value.
+  $(".dot-separator").each((_, node) => {
+    const el = $(node);
+    if (el.text().trim() === "") el.replaceWith(" · ");
+  });
 
   const fullName = clean($("h1").first().text());
   const [firstName, ...lastNameParts] = (fullName ?? "").split(" ");
@@ -533,10 +574,19 @@ export function parseProfileHtml(
   // cannot be mistaken for this profile's.
   const badgeText = basic.text();
 
+  // LinkedIn's own value beats the caller's: `/in/me` resolves to the real
+  // slug, and a redirect to a renamed profile is followed correctly.
+  const resolvedIdentifier = codeValue($, "vanityName") ?? publicIdentifier;
+
   return {
-    publicIdentifier,
+    publicIdentifier: resolvedIdentifier,
+    // Deliberately null. mwlite's `memberUrn` block holds the *viewer's* id —
+    // it is byte-identical across different people's profiles — and the page's
+    // other member URNs belong to "people also viewed". There is no way to
+    // tell which one is this profile's, and a confident wrong id is worse
+    // than an honest empty one.
     profileId: null,
-    profileUrl: profileUrlFor(publicIdentifier),
+    profileUrl: profileUrlFor(resolvedIdentifier),
 
     firstName: clean(firstName) ?? null,
     lastName: clean(lastNameParts.join(" ")) ?? null,
@@ -553,6 +603,8 @@ export function parseProfileHtml(
     },
 
     industry: null,
+    connectionDegree: parseConnectionDegree($, basic),
+
     // Not on the mwlite page at all, so `null` (unknown) rather than a guess.
     isStudent: null,
     isPremium: null,

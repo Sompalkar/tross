@@ -268,6 +268,7 @@ function Identity({
           {profile.connectionsCount !== null && (
             <Muted>{profile.connectionsCount.toLocaleString("en-US")}+ connections</Muted>
           )}
+          {profile.connectionDegree && <Chip>{profile.connectionDegree} degree</Chip>}
           {profile.isOpenToWork && <Chip>Open to work</Chip>}
           {profile.isHiring && <Chip>Hiring</Chip>}
         </div>

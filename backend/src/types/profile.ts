@@ -167,6 +167,8 @@ export interface LinkedInProfile {
   };
 
   industry: string | null;
+  /** "1st", "2nd", "3rd" — how far the profile is from the logged-in account. */
+  connectionDegree: string | null;
   isStudent: boolean | null;
   isPremium: boolean | null;
   isInfluencer: boolean | null;

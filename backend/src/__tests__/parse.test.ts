@@ -20,6 +20,22 @@ describe("parseProfileHtml", () => {
     assert.ok(profile.summary?.startsWith("I design and ship"));
   });
 
+  it("reads the identifiers LinkedIn hides in code blocks", () => {
+    // `memberUrn` is the viewer's id, identical across different people's
+    // pages, so it is deliberately not used as the profile's id.
+    assert.equal(profile.profileId, null);
+
+    // The degree element also carries the dot-separator class. Replacing
+    // every dot-separator would delete it, so only empty ones are replaced.
+    assert.equal(profile.connectionDegree, "2nd");
+
+    // LinkedIn's own vanityName wins over the slug the caller passed in,
+    // which is what makes `/in/me` and renamed profiles resolve correctly.
+    const viaMe = parseProfileHtml(html, "me");
+    assert.equal(viaMe.publicIdentifier, "ada-lovelace");
+    assert.equal(viaMe.profileUrl, "https://www.linkedin.com/in/ada-lovelace");
+  });
+
   it("separates the location from the counts sharing its element", () => {
     assert.equal(profile.location.full, "London, England, United Kingdom");
     assert.equal(profile.location.country, "United Kingdom");
@@ -116,6 +132,8 @@ describe("parseProfileHtml", () => {
     assert.deepEqual(empty.skills, []);
     assert.equal(empty.profilePicture, null);
     assert.equal(empty.publicIdentifier, "someone");
+    assert.equal(empty.profileId, null);
+    assert.equal(empty.connectionDegree, null);
   });
 });
 

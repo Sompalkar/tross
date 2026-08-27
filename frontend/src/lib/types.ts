@@ -60,6 +60,7 @@ export interface LinkedInProfile {
     postalCode: string | null;
   };
   industry: string | null;
+  connectionDegree: string | null;
   isStudent: boolean | null;
   isPremium: boolean | null;
   isInfluencer: boolean | null;
