@@ -209,9 +209,10 @@ npm run dev
 Open <http://localhost:3000>, paste a profile URL, and you get a rendered
 profile plus the raw JSON.
 
-The browser never calls the API directly — it posts to `/api/lookup`, a small
-Next.js route handler that forwards the request server-side. That keeps
-`API_KEY` out of the JavaScript bundle.
+The page calls the API directly. There is no server-side hop in the frontend:
+the Express backend is the only backend, and the Next app is a static client
+that talks to it over HTTPS. That also means the API sees real client IPs, so
+its per-IP rate limit applies per visitor.
 
 ## 5. Getting your LinkedIn cookie
 
@@ -459,7 +460,6 @@ backend/
 frontend/
   src/
     app/page.tsx               the search page
-    app/api/lookup/route.ts    server-side proxy, keeps API_KEY off the client
     components/ProfileView.tsx renders the profile
     lib/types.ts               a copy of the response schema
 ```
@@ -493,14 +493,18 @@ docker run -p 4000:4000 --env-file .env linkedin-profile-api
 
 ### Frontend on Vercel
 
-Import the repo, set **Root Directory** to `frontend`, and add:
+Import the repo, set **Root Directory** to `frontend`, and add one variable:
 
 ```
-API_BASE_URL=https://your-api.onrender.com
-API_KEY=<the same key the backend uses>
+NEXT_PUBLIC_API_BASE_URL=https://your-api.onrender.com
 ```
 
-Then set the backend's `CORS_ORIGINS` to your Vercel domain to close it off.
+`NEXT_PUBLIC_` means the value is baked into the browser bundle, which is
+correct for a public API URL — and exactly why the LinkedIn cookie and the API
+key must never be set this way.
+
+Then set the backend's `CORS_ORIGINS` to your Vercel domain to stop other sites
+calling it from a browser.
 
 ## 10. Testing
 
@@ -535,9 +539,9 @@ Deliberate choices, since the API holds a live LinkedIn session:
   path syntax, and re-encoded before it reaches LinkedIn.
 - **API keys are compared in constant time.**
 - **Upstream error details are not echoed to clients in production.**
-- **Rate limits exist on both hops** — the API limits per IP, and the frontend
-  proxy limits per visitor, since behind the proxy the API would otherwise see
-  every browser user as one IP.
+- **The rate limit sees real client IPs.** The frontend calls the API directly
+  rather than through a server-side proxy, so the per-IP limit applies per
+  visitor instead of lumping every browser user under one address.
 - **`capture*.txt` and `*.har` are git-ignored**, because a copied cURL command
   or a HAR export carries the whole cookie header.
 
@@ -548,7 +552,9 @@ Both work — it is `API_KEY` set or empty:
 - **Left open** (with the rate limit) anyone reviewing the project can `curl`
   the live URL immediately.
 - **Key required** is right for anything longer-lived, since every request
-  spends the LinkedIn account's quota.
+  spends the LinkedIn account's quota. Note the trade: a browser cannot keep a
+  secret, so the web UI only works against an open API. Key-protecting it would
+  mean giving the UI a server-side hop again, or real per-user auth.
 
 If you leave it open, keep `RATE_LIMIT_MAX` low and treat the deployment as
 temporary.

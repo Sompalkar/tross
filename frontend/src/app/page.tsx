@@ -7,6 +7,9 @@ import type { ProfileResult, ProfileSuccess } from "@/lib/types";
 
 const EXAMPLES = ["williamhgates", "satyanadella"];
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+
 export default function Home() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,18 +23,22 @@ export default function Home() {
     setError(null);
     setProfile(null);
 
+    // Straight to the API. There is no server hop in between: the backend is
+    // the only backend, and calling it directly means it sees real client IP
+    // addresses, so its per-IP rate limit applies per visitor.
+    const endpoint = new URL("/api/profile", API_BASE_URL);
+    endpoint.searchParams.set("url", value.trim());
+
     try {
-      const response = await fetch("/api/lookup", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: value }),
-      });
+      const response = await fetch(endpoint, { headers: { accept: "application/json" } });
       const result = (await response.json()) as ProfileResult;
 
       if (result.success) setProfile(result);
       else setError(result.error.message);
     } catch {
-      setError("The request failed. Check that the API is running and try again.");
+      setError(
+        `Could not reach the API at ${API_BASE_URL}. It may be starting up — try again in a moment.`,
+      );
     } finally {
       setLoading(false);
     }
